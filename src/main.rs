@@ -36,8 +36,8 @@ fn main() {
  */
 fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     let max_f = get_max_f(h, w) + 1; // exclusive
-    let mut dp1 = get_4d_vec(2, h, h + 1, w);
-    let mut dp2 = get_4d_vec(2, w, w + 1, h);
+    let mut dp1 = vec![vec![vec![vec![0; w]; h+1]; h]; 2];
+    let mut dp2 = vec![vec![vec![vec![0; h]; w+1]; w]; 2];
 
     //println!("max_f = {}", max_f);
 
@@ -206,23 +206,6 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
 
     //println!("Fallback");
     return 0;
-}
-
-fn get_4d_vec(s1: usize, s2: usize, s3: usize, s4: usize) -> Vec<Vec<Vec<Vec<u8>>>> {
-    let mut v1: Vec<Vec<Vec<Vec<u8>>>> = Vec::with_capacity(s1);
-    for _i in 0..s1 {
-        let mut v2: Vec<Vec<Vec<u8>>> = Vec::with_capacity(s2);
-        for _j in 0..s2 {
-            let mut v3: Vec<Vec<u8>> = Vec::with_capacity(s3);
-            for _k in 0..s3 {
-                let v4 = vec![0; s4];
-                v3.push(v4);
-            }
-            v2.push(v3);
-        }
-        v1.push(v2);
-    }
-    return v1;
 }
 
 fn tate_wari(
