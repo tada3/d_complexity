@@ -38,9 +38,9 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     let mut dp1 = get_4d_vec(2, h, h + 1, w);
     let mut dp2 = get_4d_vec(2, w, w + 1, h);
 
-    println!("max_f = {}", max_f);
+    //println!("max_f = {}", max_f);
 
-    println!("Init");
+    //println!("Init");
     // Init dp1 A (f=any, r2=r1)
     for f in 0..2 {
         for r1 in 0..h {
@@ -50,28 +50,44 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-    // Init dp1 B (f=0, r2 > r1)
-    println!("Init dp1 B");
+    // Init dp1 B (f=0, r2 = r2 + 1)
     for r1 in 0..h {
-        for r2 in r1 + 1..h + 1 {
+        let r2 = r1 + 1;
+        let mut c1 = 0;
+        let mut c2 = c1;
+        while c1 < w {
+            let v = masu[r1][c1];
+            // move c2
+            while c2 < w && masu[r1][c2] == v {
+                c2 += 1;
+            }
+            // move c1
+            while c1 < c2 {
+                dp1[0][r1][r2][c1] = c2 as i32;
+                c1 += 1;
+            }
+        }
+    }
+
+    // Init dp1 C (f=0, r2 > r1)
+    //println!("Init dp1 B");
+    for r1 in 0..h {
+        for r2 in r1 + 2..h + 1 {
             for c1 in 0..w {
                 //println!("xxx {}, {}, {}", r1, r2, c1);
                 let v = masu[r1][c1];
-                let c2 = if r2 == r1 + 1 && c1 > 0 && masu[r1][c1 - 1] == v {
-                    dp1[0][r1][r2][c1 - 1]
-                } else {
-                    let c2_prev = dp1[0][r1][r2 - 1][c1];
-                    //println!("XXX Else");
-                    let mut c2_tmp = c1 as i32;
-                    //println!("XXX c2_tmp = {}", c2_tmp);
-                    while c2_tmp < c2_prev && masu[r2 - 1][c2_tmp as usize] == v {
-                        //println!("XXX loop c2_tmp={}", c2_tmp);
-                        c2_tmp += 1;
-                    }
-                    c2_tmp
-                };
+
+                let c2_prev = dp1[0][r1][r2 - 1][c1];
+                //println!("XXX Else");
+                let mut c2_tmp = c1 as i32;
+                //println!("XXX c2_tmp = {}", c2_tmp);
+                while c2_tmp < c2_prev && masu[r2 - 1][c2_tmp as usize] == v {
+                    //println!("XXX loop c2_tmp={}", c2_tmp);
+                    c2_tmp += 1;
+                }
+                let c2 = c2_tmp;
                 dp1[0][r1][r2][c1] = c2;
-                println!("dp1[{}][{}][{}][{}] = {}", 0, r1, r2, c1, c2);
+                //println!("dp1[{}][{}][{}][{}] = {}", 0, r1, r2, c1, c2);
             }
         }
     }
@@ -81,7 +97,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     }
 
     // Init dp2 A (f=any, c2 = c1)
-    println!("Init dp2 A");
+    //println!("Init dp2 A");
     for f in 0..2 {
         for c1 in 0..w {
             for r1 in 0..h {
@@ -90,25 +106,43 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-    // Init dp2 B (f=0, c2 > c1)
-    println!("Init dp2 B");
+    // Init dp2 B (f=0, c2 = c1 + 1)
+    //println!("Init dp2 A");
     for c1 in 0..w {
-        for c2 in c1 + 1..w + 1 {
+        let c2 = c1 + 1;
+        let mut r1 = 0;
+        let mut r2 = r1;
+        while r1 < h {
+            let v = masu[r1][c1];
+            // move r2
+            while r2 < h && masu[r2][c1] == v {
+                r2 += 1;
+            }
+            // move r1
+            while r1 < r2 {
+                dp2[0][c1][c2][r1] = r2 as i32;
+                r1 += 1;
+            }
+        }
+    }
+
+    // Init dp2 C (f=0, c2 > c1)
+    //println!("Init dp2 B");
+    for c1 in 0..w {
+        for c2 in c1 + 2..w + 1 {
             for r1 in 0..h {
                 let v = masu[r1][c1];
-                let r2 = if c2 == c1 + 1 && r1 > 0 && v == masu[r1 - 1][c1] {
-                    dp2[0][c1][c2][r1 - 1]
-                } else {
-                    let r2_prev = dp2[0][c1][c2 - 1][r1];
-                    let mut r2_tmp = r1 as i32;
-                    //println!("XXX r2_prev={}, r2_tmp={}", r2_prev, r2_tmp);
-                    while r2_tmp < r2_prev && masu[r2_tmp as usize][c2 - 1] == v {
-                        r2_tmp += 1;
-                    }
-                    r2_tmp
-                };
+
+                let r2_prev = dp2[0][c1][c2 - 1][r1];
+                let mut r2_tmp = r1 as i32;
+                //println!("XXX r2_prev={}, r2_tmp={}", r2_prev, r2_tmp);
+                while r2_tmp < r2_prev && masu[r2_tmp as usize][c2 - 1] == v {
+                    r2_tmp += 1;
+                }
+
+                let r2 = r2_tmp;
                 dp2[0][c1][c2][r1] = r2;
-                println!("dp2[{}][{}][{}][{}] = {}", 0, c1, c2, r1, r2);
+                //println!("dp2[{}][{}][{}][{}] = {}", 0, c1, c2, r1, r2);
             }
         }
     }
@@ -118,21 +152,21 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     }
 
     // DP
-    println!("DP");
+    //println!("DP");
     for f in 1..max_f {
         for r1 in 0..h {
             for r2 in r1 + 1..h + 1 {
                 for c1 in 0..w {
-                    println!("XXX {}, {}, {}, {}", f, r1, r2, c1);
+                    //println!("XXX {}, {}, {}, {}", f, r1, r2, c1);
                     // Tate
                     let c2_tate = tate_wari(w, &dp1, r1, r2, c1, f);
 
                     let mut c2_yoko = c2_tate;
 
                     while c2_yoko < w as i32 {
-                        println!("XXX c2_yoko = {}", c2_yoko);
+                        //println!("XXX c2_yoko = {}", c2_yoko);
                         let r2_next = yoko_wari(h, &dp2, c1, (c2_yoko + 1) as usize, r1, f);
-                        println!("XXX r2_next = {}", r2_next);
+                        //println!("XXX r2_next = {}", r2_next);
                         if r2_next >= r2 as i32 {
                             c2_yoko += 1;
                             continue;
@@ -141,16 +175,18 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     }
                     dp1[f % 2][r1][r2][c1] = max(c2_tate, c2_yoko);
 
+                    /*
                     println!(
                         "dp1[{}][{}][{}][{}] = {}, {}",
                         f, r1, r2, c1, c2_tate, c2_yoko
                     );
+                    */
                 }
             }
         }
 
         if dp1[f % 2][0][h][0] == w as i32 {
-            println!("Bingo!");
+            //println!("Bingo!");
             return f as i32;
         }
 
@@ -170,26 +206,27 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     }
                     dp2[f % 2][c1][c2][r1] = max(r2_yoko, r2_tate);
 
+                    /* 
                     println!(
                         "dp2[{}][{}][{}][{}] = {}, {}",
                         f, c1, c2, r1, r2_yoko, r2_tate
                     );
+                    */
                 }
             }
         }
 
         if dp2[f % 2][0][w][0] == h as i32 {
-            println!("Bingo!");
+            //println!("Bingo!");
             return f as i32;
         }
     }
 
-    println!("Fallback");
+    //println!("Fallback");
     return 0;
 }
 
 fn get_4d_vec(s1: usize, s2: usize, s3: usize, s4: usize) -> Vec<Vec<Vec<Vec<i32>>>> {
-    println!("XXX get_4d_vec 000");
     let mut v1: Vec<Vec<Vec<Vec<i32>>>> = Vec::with_capacity(s1);
     for _i in 0..s1 {
         let mut v2: Vec<Vec<Vec<i32>>> = Vec::with_capacity(s2);
@@ -203,7 +240,6 @@ fn get_4d_vec(s1: usize, s2: usize, s3: usize, s4: usize) -> Vec<Vec<Vec<Vec<i32
         }
         v1.push(v2);
     }
-    println!("XXX 4d vec ok");
     return v1;
 }
 
@@ -240,20 +276,13 @@ fn yoko_wari(
     r1: usize,
     f: usize,
 ) -> i32 {
-    println!("XXX yoko_wari {}, {}, {}, {}, {}", h, c1, c2, r1, f);
+    //println!("XXX yoko_wari {}, {}, {}, {}, {}", h, c1, c2, r1, f);
     let r_x = dp2[(f - 1) % 2][c1][c2][r1];
     if r_x == r1 as i32 {
         r1 as i32
     } else if r_x >= h as i32 {
         h as i32
     } else {
-        println!(
-            "XXX tyring to acdess dp2 {}, {}, {}, {} ",
-            (f - 1) % 2,
-            c1,
-            c2,
-            r_x
-        );
         let r_xx = dp2[(f - 1) % 2][c1][c2][r_x as usize];
         if r_xx == r_x {
             r_x
