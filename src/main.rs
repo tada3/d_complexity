@@ -41,7 +41,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
 
     //println!("max_f = {}", max_f);
 
-    println!("Init");
+    //println!("Init");
     // Init dp1 A (f=any, r2=r1)
     for f in 0..2 {
         for r1 in 0..h {
@@ -51,8 +51,8 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-     // Init dp2 A (f=any, c2 = c1)
-    println!("Init dp2 A");
+    // Init dp2 A (f=any, c2 = c1)
+    //println!("Init dp2 A");
     for f in 0..2 {
         for c1 in 0..w {
             for r1 in 0..h {
@@ -75,14 +75,14 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
             // move c1
             while c1 < c2 {
                 dp1[0][r1][r2][c1] = c2 as i32;
-                println!( "dp1[0][{}][{}][{}] = {}", r1, r2, c1, c2); 
+                //println!("dp1[0][{}][{}][{}] = {}", r1, r2, c1, c2);
                 c1 += 1;
             }
         }
     }
 
     // Init dp2 B (f=0, c2 = c1 + 1)
-    println!("Init dp2 B");
+    //println!("Init dp2 B");
     for c1 in 0..w {
         let c2 = c1 + 1;
         let mut r1 = 0;
@@ -101,42 +101,41 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-
     // Init dp1 C (f=0, r2 > r2 + 1)
-    println!("Init dp1 C");
+    //println!("Init dp1 C");
     for r1 in 0..h {
         for r2 in r1 + 2..h + 1 {
             for c1 in 0..w {
-                let r2_c1 = dp2[0][c1][c1+1][r1];
+                let r2_c1 = dp2[0][c1][c1 + 1][r1];
                 let c2 = if r2_c1 < r2 as i32 {
                     c1 as i32
                 } else {
                     let c2_prev = dp1[0][r1][r2 - 1][c1];
-                    let c2_r2 = dp1[0][r2-1][r2][c1]; // Calculated in 'Init dp1 B'
+                    let c2_r2 = dp1[0][r2 - 1][r2][c1]; // Calculated in 'Init dp1 B'
                     min(c2_prev, c2_r2)
                 };
                 dp1[0][r1][r2][c1] = c2;
-                println!( "dp1[0][{}][{}][{}] = {}", r1, r2, c1, c2); 
+                //println!("dp1[0][{}][{}][{}] = {}", r1, r2, c1, c2);
             }
         }
     }
 
     if dp1[0][0][h][0] == w as i32 {
-        println!("Bingo!");
+        //println!("Bingo!");
         return 0;
     }
 
     // Init dp2 C (f=0, c2 > c1)
-    println!("Init dp2 C");
+    //println!("Init dp2 C");
     for c1 in 0..w {
         for c2 in c1 + 2..w + 1 {
             for r1 in 0..h {
-                let c2_r1 = dp1[0][r1][r1+1][c1];
+                let c2_r1 = dp1[0][r1][r1 + 1][c1];
                 let r2 = if c2_r1 < c2 as i32 {
                     r1 as i32
                 } else {
                     let r2_prev = dp2[0][c1][c2 - 1][r1];
-                    let r2_c2 = dp2[0][c2-1][c2][r1];
+                    let r2_c2 = dp2[0][c2 - 1][c2][r1];
                     min(r2_prev, r2_c2)
                 };
                 dp2[0][c1][c2][r1] = r2;
@@ -149,35 +148,25 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     }
 
     // DP
-    println!("DP");
+    //println!("DP");
     for f in 1..max_f {
         for r1 in 0..h {
             for r2 in r1 + 1..h + 1 {
+                let mut c2_yoko = 0;
                 for c1 in 0..w {
-                    //println!("XXX {}, {}, {}, {}", f, r1, r2, c1);
                     // Tate
                     let c2_tate = tate_wari(w, &dp1, r1, r2, c1, f);
 
-                    let mut c2_yoko = c2_tate;
-
-                    while c2_yoko < w as i32 {
-                        //println!("XXX c2_yoko = {}", c2_yoko);
+                    // Yoko
+                    while c2_yoko < w {
                         let r2_next = yoko_wari(h, &dp2, c1, (c2_yoko + 1) as usize, r1, f);
-                        //println!("XXX r2_next = {}", r2_next);
-                        if r2_next >= r2 as i32 {
-                            c2_yoko += 1;
-                            continue;
+                        if r2_next < r2 as i32 {
+                            break;
                         }
-                        break;
+                        c2_yoko += 1;
                     }
-                    dp1[f % 2][r1][r2][c1] = max(c2_tate, c2_yoko);
-
-                    
-                    println!(
-                        "dp1[{}][{}][{}][{}] = {}, {}",
-                        f, r1, r2, c1, c2_tate, c2_yoko
-                    );
-                    
+                    // Choose max
+                    dp1[f % 2][r1][r2][c1] = max(c2_tate, c2_yoko as i32);
                 }
             }
         }
@@ -189,21 +178,23 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
 
         for c1 in 0..w {
             for c2 in c1 + 1..w + 1 {
+                let mut r2_tate = 0;
                 for r1 in 0..h {
                     // Yoko
                     let r2_yoko = yoko_wari(h, &dp2, c1, c2, r1, f);
-                    let mut r2_tate = r2_yoko;
+
+                    // Tate
                     while r2_tate < h as i32 {
                         let c2_next = tate_wari(w, &dp1, r1, (r2_tate + 1) as usize, c1, f);
-                        if c2_next >= c2 as i32 {
-                            r2_tate += 1;
-                            continue;
+                        if c2_next < c2 as i32 {
+                            break;
                         }
-                        break;
+                        r2_tate += 1;
                     }
-                    dp2[f % 2][c1][c2][r1] = max(r2_yoko, r2_tate);
 
-                    /* 
+                    // Choose max
+                    dp2[f % 2][c1][c2][r1] = max(r2_yoko, r2_tate);
+                    /*
                     println!(
                         "dp2[{}][{}][{}][{}] = {}, {}",
                         f, c1, c2, r1, r2_yoko, r2_tate
