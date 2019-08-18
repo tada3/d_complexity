@@ -1,5 +1,6 @@
 use std::cmp::max;
 use std::cmp::min;
+use std::time::{Duration, Instant};
 
 fn read<T: std::str::FromStr>() -> T {
     let mut s = String::new();
@@ -20,13 +21,21 @@ fn main() {
     let hw = read_vec::<usize>();
     let h = hw[0];
     let w = hw[1];
+
     let mut masu: Vec<Vec<char>> = Vec::with_capacity(h);
     for _i in 0..h {
         let row = read::<String>().chars().collect::<Vec<char>>();
         masu.push(row);
     }
+    let start = Instant::now();
+    // std::thread::sleep(Duration::from_millis(1234));
     let c = calc(h, w, &masu);
+    let end = start.elapsed();
     println!("{}", c);
+    println!("time: {} ns", end.as_secs());
+    println!("time: {} ns", end.as_millis());
+    println!("time: {} ns", end.as_micros());
+    println!("time: {} ns", end.as_nanos());
 }
 
 /**
@@ -38,6 +47,8 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     let max_f = get_max_f(h, w) + 1; // exclusive
     let mut dp1 = vec![vec![vec![vec![0; w]; h+1]; h]; 2];
     let mut dp2 = vec![vec![vec![vec![0; h]; w+1]; w]; 2];
+    let h_u8 = h as u8;
+    let w_u8 = w as u8;
 
     //println!("max_f = {}", max_f);
 
@@ -46,7 +57,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     for f in 0..2 {
         for r1 in 0..h {
             for c1 in 0..w {
-                dp1[f][r1][r1][c1] = w as u8;
+                dp1[f][r1][r1][c1] = w_u8;
             }
         }
     }
@@ -56,7 +67,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     for f in 0..2 {
         for c1 in 0..w {
             for r1 in 0..h {
-                dp2[f][c1][c1][r1] = h as u8;
+                dp2[f][c1][c1][r1] = h_u8;
             }
         }
     }
@@ -115,12 +126,13 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     c1 += 1;
                 } else {
                     // get c2
-                    let c2_prev = dp1[0][r1][r2 - 1][c1] as usize;
-                    let c2_r2 = dp1[0][r2 - 1][r2][c1] as usize; // Calculated in 'Init dp1 B'
-                    let c2 = min(c2_prev, c2_r2);
+                    let c2_prev = dp1[0][r1][r2 - 1][c1];
+                    let c2_r2 = dp1[0][r2 - 1][r2][c1]; // Calculated in 'Init dp1 B'
+                    let c2_u8 = min(c2_prev, c2_r2);
+                    let c2 = c2_u8 as usize;
                     // move c1
-                    while c1 < c2 {
-                        dp1[0][r1][r2][c1] = c2 as u8;
+                    while c1 < c2 as usize {
+                        dp1[0][r1][r2][c1] = c2_u8;
                         c1 += 1;
                     }
                 }
@@ -128,7 +140,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-    if dp1[0][0][h][0] as usize == w {
+    if dp1[0][0][h][0] == w_u8 {
         //println!("Bingo!");
         return 0;
     }
@@ -144,11 +156,12 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     dp2[0][c1][c2][r1] = r1 as u8;
                     r1 += 1;                   
                 } else {
-                    let r2_prev = dp2[0][c1][c2 - 1][r1] as usize;
-                    let r2_c2 = dp2[0][c2 - 1][c2][r1] as usize;
-                    let r2 = min(r2_prev, r2_c2);
+                    let r2_prev = dp2[0][c1][c2 - 1][r1];
+                    let r2_c2 = dp2[0][c2 - 1][c2][r1];
+                    let r2_u8 = min(r2_prev, r2_c2);
+                    let r2 = r2_u8 as usize;
                     while r1 < r2 {
-                        dp2[0][c1][c2][r1] = r2 as u8;
+                        dp2[0][c1][c2][r1] = r2_u8;
                         r1 += 1;
                     }
                 }
@@ -156,7 +169,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         }
     }
 
-    if dp2[0][0][w][0] as usize == h {
+    if dp2[0][0][w][0] == h_u8 {
         return 0;
     }
 
@@ -186,7 +199,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     if c2 == w {
                         // if c2 is w, for all cx > c1, dp1[f][r1][r2][cx] = w.
                         while c1 < w {
-                            dp1[f_cur][r1][r2][c1] = w as u8;
+                            dp1[f_cur][r1][r2][c1] = w_u8;
                             c1 += 1;
                         }
                     }
@@ -194,7 +207,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
             }
         }
 
-        if dp1[f_cur][0][h][0] as usize == w {
+        if dp1[f_cur][0][h][0] == w_u8 {
             //println!("Bingo!");
             return f as i32;
         }
@@ -219,7 +232,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
 
                     if r2 == h {
                         while r1 < h {
-                            dp2[f_cur][c1][c2][r1] = h as u8;
+                            dp2[f_cur][c1][c2][r1] = h_u8;
                             r1 += 1;
                         }
                     }
@@ -227,7 +240,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
             }
         }
 
-        if dp2[f_cur][0][w][0] as usize == h {
+        if dp2[f_cur][0][w][0] == h_u8 {
             //println!("Bingo!");
             return f as i32;
         }
