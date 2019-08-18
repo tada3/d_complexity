@@ -1,5 +1,6 @@
 use std::cmp::max;
 use std::cmp::min;
+use std::time::{Duration, Instant};
 
 fn read<T: std::str::FromStr>() -> T {
     let mut s = String::new();
@@ -25,8 +26,13 @@ fn main() {
         let row = read::<String>().chars().collect::<Vec<char>>();
         masu.push(row);
     }
+    let start = Instant::now();
+
     let c = calc(h, w, &masu);
+    
+    let end = start.elapsed();
     println!("{}", c);
+    println!("time: {} us", end.as_micros());
 }
 
 /**
