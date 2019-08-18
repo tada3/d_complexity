@@ -150,28 +150,26 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     // DP
     //println!("DP");
     for f in 1..max_f {
+        let f_cur = f %2;
+        let f_prev = (f-1) % 2;
         for r1 in 0..h {
             for r2 in r1 + 1..h + 1 {
                 let mut c2_yoko = 0;
                 for c1 in 0..w {
                     // Tate
-                    let c2_tate = tate_wari(w, &dp1, r1, r2, c1, f);
+                    let c2_tate = tate_wari(w, &dp1, r1, r2, c1, f_prev);
 
                     // Yoko
-                    while c2_yoko < w {
-                        let r2_next = yoko_wari(h, &dp2, c1, (c2_yoko + 1) as usize, r1, f);
-                        if r2_next < r2 {
-                            break;
-                        }
+                    while c2_yoko < w && yoko_wari(h, &dp2, c1, c2_yoko + 1, r1, f_prev) >= r2 {
                         c2_yoko += 1;
                     }
                     // Choose max
-                    dp1[f % 2][r1][r2][c1] = max(c2_tate, c2_yoko) as u8;
+                    dp1[f_cur][r1][r2][c1] = max(c2_tate, c2_yoko) as u8;
                 }
             }
         }
 
-        if dp1[f % 2][0][h][0] as usize == w {
+        if dp1[f_cur][0][h][0] as usize == w {
             //println!("Bingo!");
             return f as i32;
         }
@@ -181,19 +179,15 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                 let mut r2_tate = 0;
                 for r1 in 0..h {
                     // Yoko
-                    let r2_yoko = yoko_wari(h, &dp2, c1, c2, r1, f);
+                    let r2_yoko = yoko_wari(h, &dp2, c1, c2, r1, f_prev);
 
                     // Tate
-                    while r2_tate < h {
-                        let c2_next = tate_wari(w, &dp1, r1, (r2_tate + 1) as usize, c1, f);
-                        if c2_next < c2 {
-                            break;
-                        }
+                    while r2_tate < h && tate_wari(w, &dp1, r1, r2_tate + 1, c1, f_prev) >= c2 {
                         r2_tate += 1;
                     }
 
                     // Choose max
-                    dp2[f % 2][c1][c2][r1] = max(r2_yoko, r2_tate) as u8;
+                    dp2[f_cur][c1][c2][r1] = max(r2_yoko, r2_tate) as u8;
                     /*
                     println!(
                         "dp2[{}][{}][{}][{}] = {}, {}",
@@ -204,7 +198,7 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
             }
         }
 
-        if dp2[f % 2][0][w][0] as usize == h {
+        if dp2[f_cur][0][w][0] as usize == h {
             //println!("Bingo!");
             return f as i32;
         }
@@ -237,22 +231,17 @@ fn tate_wari(
     r1: usize,
     r2: usize,
     c1: usize,
-    f: usize,
+    f_prev: usize,
 ) -> usize {
     //println!("XXX tate_wari {}, {}, {}, {}, {}", w, r1, r2, c1, f);
-    let c_x = dp1[(f - 1) % 2][r1][r2][c1] as usize;
+    let c_x = dp1[f_prev][r1][r2][c1] as usize;
     //println!("XXXX c_x = {}", c_x);
     if c_x == c1 {
         c1
     } else if c_x >= w {
         w
     } else {
-        let c_xx = dp1[(f - 1) % 2][r1][r2][c_x] as usize;
-        if c_xx == c_x {
-            c_x
-        } else {
-            c_xx
-        }
+        dp1[f_prev][r1][r2][c_x] as usize
     }
 }
 
@@ -262,21 +251,16 @@ fn yoko_wari(
     c1: usize,
     c2: usize,
     r1: usize,
-    f: usize,
+    f_prev: usize,
 ) -> usize {
     //println!("XXX yoko_wari {}, {}, {}, {}, {}", h, c1, c2, r1, f);
-    let r_x = dp2[(f - 1) % 2][c1][c2][r1] as usize;
+    let r_x = dp2[f_prev][c1][c2][r1] as usize;
     if r_x == r1 {
         r1
     } else if r_x >= h {
         h
     } else {
-        let r_xx = dp2[(f - 1) % 2][c1][c2][r_x] as usize;
-        if r_xx == r_x {
-            r_x
-        } else {
-            r_xx
-        }
+        dp2[f_prev][c1][c2][r_x] as usize
     }
 }
 
