@@ -107,7 +107,6 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         for r2 in r1 + 2..h + 1 {
             let mut c1 = 0;
             while c1 < w {
-                println!("{}, {}, {}", r1, r2, c1);
                 // get c2
                 let r2_c1 = dp2[0][c1][c1 + 1][r1] as usize;
                 if r2_c1 < r2 {
@@ -168,8 +167,9 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
         let f_prev = (f-1) % 2;
         for r1 in 0..h {
             for r2 in r1 + 1..h + 1 {
+                let mut c1 = 0;
                 let mut c2_yoko = 0;
-                for c1 in 0..w {
+                while c1 < w {
                     // Tate
                     let c2_tate = tate_wari(w, &dp1, r1, r2, c1, f_prev);
 
@@ -177,8 +177,19 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     while c2_yoko < w && yoko_wari(h, &dp2, c1, c2_yoko + 1, r1, f_prev) >= r2 {
                         c2_yoko += 1;
                     }
+
                     // Choose max
-                    dp1[f_cur][r1][r2][c1] = max(c2_tate, c2_yoko) as u8;
+                    let c2 = max(c2_tate, c2_yoko);
+                    dp1[f_cur][r1][r2][c1] = c2 as u8;
+                    c1 += 1;
+
+                    if c2 == w {
+                        // if c2 is w, for all cx > c1, dp1[f][r1][r2][cx] = w.
+                        while c1 < w {
+                            dp1[f_cur][r1][r2][c1] = w as u8;
+                            c1 += 1;
+                        }
+                    }
                 }
             }
         }
@@ -190,8 +201,9 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
 
         for c1 in 0..w {
             for c2 in c1 + 1..w + 1 {
+                let mut r1 = 0;
                 let mut r2_tate = 0;
-                for r1 in 0..h {
+                while r1 < h {
                     // Yoko
                     let r2_yoko = yoko_wari(h, &dp2, c1, c2, r1, f_prev);
 
@@ -201,13 +213,16 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
                     }
 
                     // Choose max
-                    dp2[f_cur][c1][c2][r1] = max(r2_yoko, r2_tate) as u8;
-                    /*
-                    println!(
-                        "dp2[{}][{}][{}][{}] = {}, {}",
-                        f, c1, c2, r1, r2_yoko, r2_tate
-                    );
-                    */
+                    let r2 = max(r2_yoko, r2_tate);
+                    dp2[f_cur][c1][c2][r1] = r2 as u8;
+                    r1 += 1;
+
+                    if r2 == h {
+                        while r1 < h {
+                            dp2[f_cur][c1][c2][r1] = h as u8;
+                            r1 += 1;
+                        }
+                    }
                 }
             }
         }
@@ -230,9 +245,7 @@ fn tate_wari(
     c1: usize,
     f_prev: usize,
 ) -> usize {
-    //println!("XXX tate_wari {}, {}, {}, {}, {}", w, r1, r2, c1, f);
     let c_x = dp1[f_prev][r1][r2][c1] as usize;
-    //println!("XXXX c_x = {}", c_x);
     if c_x == c1 {
         c1
     } else if c_x >= w {
@@ -250,7 +263,6 @@ fn yoko_wari(
     r1: usize,
     f_prev: usize,
 ) -> usize {
-    //println!("XXX yoko_wari {}, {}, {}, {}, {}", h, c1, c2, r1, f);
     let r_x = dp2[f_prev][c1][c2][r1] as usize;
     if r_x == r1 {
         r1
