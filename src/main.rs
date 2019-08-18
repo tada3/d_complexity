@@ -105,17 +105,26 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     //println!("Init dp1 C");
     for r1 in 0..h {
         for r2 in r1 + 2..h + 1 {
-            for c1 in 0..w {
+            let mut c1 = 0;
+            while c1 < w {
+                println!("{}, {}, {}", r1, r2, c1);
+                // get c2
                 let r2_c1 = dp2[0][c1][c1 + 1][r1] as usize;
-                let c2 = if r2_c1 < r2 {
-                    c1
+                if r2_c1 < r2 {
+                    // no one-color region
+                    dp1[0][r1][r2][c1] = c1 as u8;
+                    c1 += 1;
                 } else {
+                    // get c2
                     let c2_prev = dp1[0][r1][r2 - 1][c1] as usize;
                     let c2_r2 = dp1[0][r2 - 1][r2][c1] as usize; // Calculated in 'Init dp1 B'
-                    min(c2_prev, c2_r2)
-                };
-                dp1[0][r1][r2][c1] = c2 as u8;
-                //println!("dp1[0][{}][{}][{}] = {}", r1, r2, c1, c2);
+                    let c2 = min(c2_prev, c2_r2);
+                    // move c1
+                    while c1 < c2 {
+                        dp1[0][r1][r2][c1] = c2 as u8;
+                        c1 += 1;
+                    }
+                }
             }
         }
     }
@@ -129,16 +138,21 @@ fn calc(h: usize, w: usize, masu: &Vec<Vec<char>>) -> i32 {
     //println!("Init dp2 C");
     for c1 in 0..w {
         for c2 in c1 + 2..w + 1 {
-            for r1 in 0..h {
+            let mut r1 = 0;
+            while r1 < h {
                 let c2_r1 = dp1[0][r1][r1 + 1][c1] as usize;
-                let r2 = if c2_r1 < c2 {
-                    r1
+                if c2_r1 < c2 {
+                    dp2[0][c1][c2][r1] = r1 as u8;
+                    r1 += 1;                   
                 } else {
                     let r2_prev = dp2[0][c1][c2 - 1][r1] as usize;
                     let r2_c2 = dp2[0][c2 - 1][c2][r1] as usize;
-                    min(r2_prev, r2_c2)
-                };
-                dp2[0][c1][c2][r1] = r2 as u8;
+                    let r2 = min(r2_prev, r2_c2);
+                    while r1 < r2 {
+                        dp2[0][c1][c2][r1] = r2 as u8;
+                        r1 += 1;
+                    }
+                }
             }
         }
     }
